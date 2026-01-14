@@ -226,7 +226,7 @@ func (g *SQLGenerator) generateAlterColumn(tableName string, col *ColumnChanges)
 		}
 		if col.DefaultChanged {
 			// SQL Server requires dropping and adding default constraint
-			sb.WriteString(fmt.Sprintf("-- Note: May need to drop existing default constraint first\n"))
+			sb.WriteString("-- Note: May need to drop existing default constraint first\n")
 			if col.NewDefault != nil {
 				sb.WriteString(fmt.Sprintf("ALTER TABLE %s ADD DEFAULT %s FOR %s;\n",
 					tableName, *col.NewDefault, g.quoteName(col.Name)))

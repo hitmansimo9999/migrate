@@ -282,9 +282,8 @@ func (g *Generator) toPostgres(t string, isIdentity bool) string {
 }
 
 func (g *Generator) toMySQL(t string, isIdentity bool) string {
-	baseType := t
 	if isIdentity {
-		baseType = "INT"
+		baseType := "INT"
 		if strings.Contains(t, "BIG") || t == "BIGSERIAL" {
 			baseType = "BIGINT"
 		}
@@ -314,9 +313,8 @@ func (g *Generator) toMySQL(t string, isIdentity bool) string {
 }
 
 func (g *Generator) toSQLServer(t string, isIdentity bool) string {
-	baseType := t
 	if isIdentity {
-		baseType = "INT"
+		baseType := "INT"
 		if strings.Contains(t, "BIG") || t == "BIGSERIAL" {
 			baseType = "BIGINT"
 		}

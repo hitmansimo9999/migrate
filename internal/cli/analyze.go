@@ -44,7 +44,7 @@ Output formats:
 func init() {
 	analyzeCmd.Flags().StringVar(&sourceURI, "source", "", "Database connection string or SQL file path (required)")
 	analyzeCmd.Flags().StringVar(&sourceDialect, "dialect", "", "SQL dialect for file parsing: postgres, mysql, sqlserver")
-	analyzeCmd.MarkFlagRequired("source")
+	_ = analyzeCmd.MarkFlagRequired("source")
 }
 
 func runAnalyze(cmd *cobra.Command, args []string) error {

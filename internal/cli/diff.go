@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	targetURI     string
-	targetDialect string
+	targetURI string
 )
 
 var diffCmd = &cobra.Command{
@@ -44,8 +43,8 @@ func init() {
 	diffCmd.Flags().StringVar(&sourceURI, "source", "", "Source schema (connection string or file path)")
 	diffCmd.Flags().StringVar(&targetURI, "target", "", "Target schema (connection string or file path)")
 	diffCmd.Flags().StringVar(&sourceDialect, "dialect", "", "SQL dialect for file parsing: postgres, mysql, sqlserver")
-	diffCmd.MarkFlagRequired("source")
-	diffCmd.MarkFlagRequired("target")
+	_ = diffCmd.MarkFlagRequired("source")
+	_ = diffCmd.MarkFlagRequired("target")
 }
 
 func runDiff(cmd *cobra.Command, args []string) error {

@@ -42,9 +42,9 @@ func init() {
 	transformCmd.Flags().StringVar(&inputFile, "input", "", "Input SQL file path (required)")
 	transformCmd.Flags().StringVar(&fromDialect, "from", "", "Source dialect: postgres, mysql, sqlserver (required)")
 	transformCmd.Flags().StringVar(&toDialect, "to", "", "Target dialect: postgres, mysql, sqlserver (required)")
-	transformCmd.MarkFlagRequired("input")
-	transformCmd.MarkFlagRequired("from")
-	transformCmd.MarkFlagRequired("to")
+	_ = transformCmd.MarkFlagRequired("input")
+	_ = transformCmd.MarkFlagRequired("from")
+	_ = transformCmd.MarkFlagRequired("to")
 }
 
 func runTransform(cmd *cobra.Command, args []string) error {
