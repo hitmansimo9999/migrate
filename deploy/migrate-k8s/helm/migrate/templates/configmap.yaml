@@ -1,0 +1,13 @@
+{{- if .Values.sqlFiles }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "migrate.fullname" . }}-sql
+  labels:
+    {{- include "migrate.labels" . | nindent 4 }}
+data:
+  {{- range $name, $content := .Values.sqlFiles }}
+  {{ $name }}: |
+    {{- $content | nindent 4 }}
+  {{- end }}
+{{- end }}

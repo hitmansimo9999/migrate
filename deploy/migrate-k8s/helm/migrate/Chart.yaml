@@ -1,0 +1,20 @@
+apiVersion: v2
+name: migrate
+description: A Helm chart for running database schema migration analysis jobs
+type: application
+version: 0.1.0
+appVersion: "0.5.3"
+keywords:
+  - database
+  - migration
+  - schema
+  - postgresql
+  - mysql
+  - sql-server
+  - devops
+home: https://github.com/egoughnour/migrate
+sources:
+  - https://github.com/egoughnour/migrate
+maintainers:
+  - name: Erik Goughnour
+    email: e.goughnour@gmail.com

@@ -1,0 +1,107 @@
+# Default values for migrate
+# This is a YAML-formatted file.
+
+# Image configuration
+image:
+  repository: ghcr.io/egoughnour/migrate
+  pullPolicy: IfNotPresent
+  tag: ""  # Defaults to appVersion
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Migration job configuration
+migration:
+  # Command to run: analyze, diff, or transform
+  command: analyze
+
+  # Source database or file
+  source:
+    # Connection string for live database
+    # Format: postgres://user:pass@host:5432/dbname
+    connectionString: ""
+    # Or path to SQL file (mounted via configmap or volume)
+    sqlFile: ""
+    # Dialect when using SQL file: postgres, mysql, sqlserver
+    dialect: postgres
+
+  # Target (for diff command)
+  target:
+    connectionString: ""
+    sqlFile: ""
+    dialect: postgres
+
+  # Transform options (for transform command)
+  transform:
+    fromDialect: postgres
+    toDialect: mysql
+    inputFile: ""
+
+  # Output configuration
+  output:
+    # Format: text, json, yaml, sql
+    format: json
+    # Write to file instead of stdout
+    file: ""
+
+# Job configuration
+job:
+  # Restart policy: Never or OnFailure
+  restartPolicy: Never
+  # Number of retries before marking job as failed
+  backoffLimit: 3
+  # Time to keep completed job (seconds)
+  ttlSecondsAfterFinished: 3600
+  # Active deadline (seconds)
+  activeDeadlineSeconds: 600
+
+# Pod configuration
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+
+# Resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# ConfigMap for SQL files
+sqlFiles: {}
+  # schema.sql: |
+  #   CREATE TABLE users (
+  #     id SERIAL PRIMARY KEY,
+  #     name VARCHAR(255)
+  #   );
+
+# Secrets for database credentials
+# Use existing secret or create new one
+existingSecret: ""
+secrets:
+  # Source database password (if not in connection string)
+  sourcePassword: ""
+  # Target database password (if not in connection string)
+  targetPassword: ""
+
+# CronJob configuration (for scheduled analysis)
+cronJob:
+  enabled: false
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1

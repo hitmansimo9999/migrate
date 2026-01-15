@@ -1,0 +1,296 @@
+# Kubernetes Job manifest for migrate
+# Simple deployment without Helm
+#
+# Usage:
+#   kubectl apply -f k8s-job.yaml
+#
+# For live database analysis:
+#   1. Update SOURCE_CONNECTION_STRING in the Secret
+#   2. Set command args to: ["analyze", "--source", "$(SOURCE_CONNECTION_STRING)", "--output", "json"]
+#
+# For SQL file analysis:
+#   1. Add your SQL to the ConfigMap
+#   2. Set command args to: ["analyze", "--source", "/sql/schema.sql", "--dialect", "postgres"]
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: migrate
+  labels:
+    app.kubernetes.io/name: migrate
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: migrate
+  namespace: migrate
+  labels:
+    app.kubernetes.io/name: migrate
+
+---
+# Secret for database credentials
+# Replace with your actual connection string or use external secrets operator
+apiVersion: v1
+kind: Secret
+metadata:
+  name: migrate-credentials
+  namespace: migrate
+  labels:
+    app.kubernetes.io/name: migrate
+type: Opaque
+stringData:
+  # PostgreSQL connection string format
+  source-connection-string: "postgres://user:password@host:5432/dbname?sslmode=require"
+  # Optional: target connection string for diff operations
+  target-connection-string: ""
+
+---
+# ConfigMap for SQL files (optional - for file-based analysis)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: migrate-sql
+  namespace: migrate
+  labels:
+    app.kubernetes.io/name: migrate
+data:
+  # Example schema file - replace with your schema
+  source-schema.sql: |
+    -- Source schema
+    CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE posts (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        title VARCHAR(255) NOT NULL,
+        content TEXT,
+        published_at TIMESTAMP
+    );
+
+  target-schema.sql: |
+    -- Target schema (for diff comparison)
+    CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        username VARCHAR(100),  -- New column
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP    -- New column
+    );
+
+    CREATE TABLE posts (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        title VARCHAR(255) NOT NULL,
+        content TEXT,
+        status VARCHAR(20) DEFAULT 'draft',  -- New column
+        published_at TIMESTAMP
+    );
+
+    -- New table
+    CREATE TABLE comments (
+        id SERIAL PRIMARY KEY,
+        post_id INTEGER REFERENCES posts(id),
+        user_id INTEGER REFERENCES users(id),
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+---
+# Job for schema analysis
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-analyze
+  namespace: migrate
+  labels:
+    app.kubernetes.io/name: migrate
+    app.kubernetes.io/component: analyze
+spec:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: migrate
+        app.kubernetes.io/component: analyze
+    spec:
+      serviceAccountName: migrate
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/egoughnour/migrate:0.5.3
+          # Analyze from SQL file
+          args:
+            - analyze
+            - --source
+            - /sql/source-schema.sql
+            - --dialect
+            - postgres
+            - --output
+            - json
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: sql-files
+              mountPath: /sql
+              readOnly: true
+      volumes:
+        - name: sql-files
+          configMap:
+            name: migrate-sql
+
+---
+# Job for schema diff (generates migration SQL)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-diff
+  namespace: migrate
+  labels:
+    app.kubernetes.io/name: migrate
+    app.kubernetes.io/component: diff
+spec:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: migrate
+        app.kubernetes.io/component: diff
+    spec:
+      serviceAccountName: migrate
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/egoughnour/migrate:0.5.3
+          # Diff two schema files and output migration SQL
+          args:
+            - diff
+            - --source
+            - /sql/source-schema.sql
+            - --target
+            - /sql/target-schema.sql
+            - --output
+            - sql
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: sql-files
+              mountPath: /sql
+              readOnly: true
+      volumes:
+        - name: sql-files
+          configMap:
+            name: migrate-sql
+
+---
+# Job for live database analysis
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-analyze-live
+  namespace: migrate
+  labels:
+    app.kubernetes.io/name: migrate
+    app.kubernetes.io/component: analyze-live
+spec:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: migrate
+        app.kubernetes.io/component: analyze-live
+    spec:
+      serviceAccountName: migrate
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/egoughnour/migrate:0.5.3
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              migrate analyze \
+                --source "$SOURCE_CONNECTION_STRING" \
+                --output json
+          env:
+            - name: SOURCE_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: migrate-credentials
+                  key: source-connection-string
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+---
+# CronJob for scheduled schema drift detection
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: migrate-drift-check
+  namespace: migrate
+  labels:
+    app.kubernetes.io/name: migrate
+    app.kubernetes.io/component: drift-check
+spec:
+  schedule: "0 6 * * *"  # Daily at 6 AM UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400  # Keep for 24 hours
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: migrate
+            app.kubernetes.io/component: drift-check
+        spec:
+          serviceAccountName: migrate
+          restartPolicy: Never
+          containers:
+            - name: migrate
+              image: ghcr.io/egoughnour/migrate:0.5.3
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  echo "=== Schema Drift Check $(date) ==="
+                  migrate analyze \
+                    --source "$SOURCE_CONNECTION_STRING" \
+                    --output json | tee /tmp/schema.json
+                  echo "=== Analysis Complete ==="
+              env:
+                - name: SOURCE_CONNECTION_STRING
+                  valueFrom:
+                    secretKeyRef:
+                      name: migrate-credentials
+                      key: source-connection-string
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
